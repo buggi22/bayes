@@ -1,12 +1,12 @@
 package com.example.ai.bayes;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
-import java.util.List;
 import java.util.Map;
 
 @AutoValue
@@ -16,13 +16,24 @@ public abstract class ConditionalDistribution {
   public abstract ImmutableMap<ImmutableList<String>, Double>
       getProbabilities();
 
+  public ImmutableSet<String> getValues() {
+    ImmutableSet.Builder<String> values = ImmutableSet.builder();
+    for (ImmutableList<String> key : getProbabilities().keySet()) {
+      // The first value of the key corresponds to the value of the variable.
+      // (The remaining values in the key correspond to values of the parent
+      // variables, which can be ignored here.)
+      values.add(key.get(0));
+    }
+    return values.build();
+  }
+
   public static Builder forVariable(String variableName) {
     return new Builder(variableName);
   }
 
   public static class Builder {
     private final String variableName;
-    private final List<String> parentVariableNames = Lists.newArrayList();
+    private ImmutableList<String> parentVariableNames = ImmutableList.of();
     private final Map<ImmutableList<String>, Double> probabilities =
         Maps.newLinkedHashMap();
 
@@ -32,6 +43,8 @@ public abstract class ConditionalDistribution {
 
     public Builder setProbability(
         double probability, String firstValue, String... otherValues) {
+      Preconditions.checkState(
+          otherValues.length == parentVariableNames.size());
       ImmutableList<String> values = ImmutableList.<String>builder()
           .add(firstValue)
           .addAll(ImmutableList.copyOf(otherValues))
@@ -41,15 +54,14 @@ public abstract class ConditionalDistribution {
     }
 
     public Builder setParents(String... parents) {
-      parentVariableNames.clear();
-      parentVariableNames.addAll(ImmutableList.copyOf(parents));
+      parentVariableNames = ImmutableList.copyOf(parents);
       return this;
     }
 
     public ConditionalDistribution build() {
       return new AutoValue_ConditionalDistribution(
           variableName,
-          ImmutableList.copyOf(parentVariableNames),
+          parentVariableNames,
           ImmutableMap.copyOf(probabilities));
     }
   }

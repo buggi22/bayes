@@ -1,15 +1,18 @@
 package com.example.ai.bayes;
 
 import com.example.ai.bayes.Event.AndClause;
-import com.example.ai.bayes.Event.Case;
+import com.example.ai.bayes.Event.Condition;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -18,67 +21,90 @@ public abstract class BayesNetwork {
   public abstract ImmutableList<ConditionalDistribution>
       getConditionalDistributions();
 
-  private ConditionalDistribution getDistribution(String variableName) {
-    for (ConditionalDistribution distribution : getConditionalDistributions()) {
-      if (distribution.getVariableName().equals(variableName)) {
-        return distribution;
-      }
-    }
-    return null;
+  /**
+   * Computes the probability of an {@link Event}, conditioned on evidence
+   * from another event.
+   */
+  public double queryProbability(Event queryEvent, Event evidence) {
+    return queryProbability(Event.and(queryEvent, evidence))
+        / queryProbability(evidence);
   }
 
-  private Set<String> getValues(String variableName) {
-    ConditionalDistribution distribution = getDistribution(variableName);
-    ImmutableSet.Builder<String> values = ImmutableSet.builder();
-    for (ImmutableList<String> key : distribution.getProbabilities().keySet()) {
-      // The first value of the key corresponds to the value of the variable.
-      // (The remaining values in the key correspond to values of the parent
-      // variables, which can be ignored here.)
-      values.add(key.get(0));
-    }
-    return values.build();
-  }
-
-  public ImmutableList<String> getVariables() {
-    ImmutableList.Builder<String> result = ImmutableList.builder();
-    for (ConditionalDistribution distribution : getConditionalDistributions()) {
-      result.add(distribution.getVariableName());
-    }
-    return result.build();
-  }
-
+  /**
+   * Computes the a-priori probability of a given {@link Event}
+   */
   public double queryProbability(Event queryEvent) {
     if (queryEvent.getAndClauses().isEmpty()) {
       return 0d;
     }
-    if (queryEvent.getAndClauses().size() > 1) {
-      // TODO: support this case
-      throw new UnsupportedOperationException(
-          "Querying probabilities for OR-expressions with more than one "
-          + "AND-clause is not yet unsupported");
+    if (queryEvent.getAndClauses().size() == 1) {
+      return getProbabilityForSingleAndClause(
+          queryEvent.getAndClauses().get(0));
     }
 
-    AndClause andClause = queryEvent.getAndClauses().get(0);
+    AndClause firstClause = queryEvent.getAndClauses().get(0);
+    ImmutableList<? extends AndClause> remainingClauses =
+        queryEvent.getAndClauses().subList(
+            1, queryEvent.getAndClauses().size());
+
+    Event firstClauseEvent = Event.of(firstClause);
+    Event remainingOrEvent = Event.fromAndClauses(remainingClauses);
+
+    return queryProbability(firstClauseEvent)
+        + queryProbability(remainingOrEvent)
+        - queryProbability(Event.and(firstClauseEvent, remainingOrEvent));
+  }
+
+  private double getProbabilityForSingleAndClause(AndClause andClause) {
     ImmutableMap.Builder<String, String> partialAssignment =
         ImmutableMap.builder();
-    for (Case positiveCase : andClause.getPositiveCases()) {
-      partialAssignment.put(
-          positiveCase.getVariable(), positiveCase.getValue());
-    }
-
     ImmutableMultimap.Builder<String, String> remainingCombinations =
         ImmutableMultimap.builder();
+    for (String variable : andClause.getConditions().keySet()) {
+      Collection<? extends Condition> conditions =
+          andClause.getConditions().get(variable);
+      Set<String> allowedValues = getAllowedValues(variable, conditions);
+      if (allowedValues.isEmpty()) {
+        // There's no way to satisfy the given conditions, so the probability
+        // is zero.
+        return 0;
+      } else if (allowedValues.size() == 1) {
+        partialAssignment.put(
+            variable, Iterables.getOnlyElement(allowedValues));
+      } else {
+        remainingCombinations.putAll(variable, allowedValues);
+      }
+    }
+
+    // Handle all nuisance variables (the variables that don't appear directly
+    // in this clause).
     for (String nuisanceVar : getNuisanceVariables(andClause)) {
       remainingCombinations.putAll(nuisanceVar, getValues(nuisanceVar));
     }
-    for (Case negativeCase : andClause.getNegativeCases()) {
-      remainingCombinations.putAll(negativeCase.getVariable(),
-          Sets.difference(
-              getValues(negativeCase.getVariable()),
-              Sets.newHashSet(negativeCase.getValue())));
-    }
+
     return getProbabilityRecursive(
         partialAssignment.build(), remainingCombinations.build());
+  }
+
+  private ImmutableSet<String> getAllowedValues(String variable,
+      Collection<? extends Condition> conditions) {
+    Set<String> result = getValues(variable);
+    for (Condition condition : conditions) {
+      switch (condition.getType()) {
+        case EQUAL:
+          result = Sets.filter(
+              result, Predicates.equalTo(condition.getValue()));
+          break;
+        case NOT_EQUAL:
+          result = Sets.filter(
+              result, Predicates.not(Predicates.equalTo(condition.getValue())));
+          break;
+        default:
+          throw new AssertionError(
+              "Unhandled condition type " + condition.getType());
+      }
+    }
+    return ImmutableSet.copyOf(result);
   }
 
   private double getProbabilityRecursive(
@@ -127,24 +153,35 @@ public abstract class BayesNetwork {
     return result;
   }
 
+  private ConditionalDistribution getDistribution(String variableName) {
+    for (ConditionalDistribution distribution : getConditionalDistributions()) {
+      if (distribution.getVariableName().equals(variableName)) {
+        return distribution;
+      }
+    }
+    return null;
+  }
+
+  private ImmutableSet<String> getValues(String variableName) {
+    return getDistribution(variableName).getValues();
+  }
+
+  public ImmutableList<String> getVariables() {
+    ImmutableList.Builder<String> result = ImmutableList.builder();
+    for (ConditionalDistribution distribution : getConditionalDistributions()) {
+      result.add(distribution.getVariableName());
+    }
+    return result.build();
+  }
+
   /**
    * Gets all variables that are included in this {@link BayesNetwork} but
    * not in the given {@link AndClause}.
    */
-  private List<String> getNuisanceVariables(AndClause andClause) {
-    Set<String> result = Sets.newHashSet(getVariables());
-    for (Case c : andClause.getPositiveCases()) {
-      result.remove(c.getVariable());
-    }
-    for (Case c : andClause.getNegativeCases()) {
-      result.remove(c.getVariable());
-    }
-    return ImmutableList.copyOf(result);
-  }
-
-  public Double queryProbability(Event queryEvent, Event evidence) {
-    return queryProbability(Event.and(queryEvent, evidence))
-        / queryProbability(evidence);
+  private ImmutableSet<String> getNuisanceVariables(AndClause andClause) {
+    return ImmutableSet.copyOf(Sets.difference(
+        ImmutableSet.copyOf(getVariables()),
+        andClause.getConditions().keySet()));
   }
 
   public static Builder builder() {
