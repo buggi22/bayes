@@ -6,3 +6,9 @@ bin/
 
 # Annotation processor (generated) files
 .apt_generated/
+
+# Eclipse files
+.classpath
+.factorypath
+.project
+.settings/
