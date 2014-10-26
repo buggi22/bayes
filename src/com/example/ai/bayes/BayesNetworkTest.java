@@ -40,22 +40,22 @@ public class BayesNetworkTest extends TestCase {
     BayesNetwork network = getLadyOrTigerNetwork();
 
     // Compute the probability of surviving the first round.
-    Event queryEvent = Event.of("Reveal1", "L");
+    Event queryEvent = Event.varEquals("Reveal1", "L");
 
     double probability = network.queryProbability(queryEvent);
     assertEquals(1/2d, probability, DELTA);
 
     // Compute the probability of surviving all 3 rounds.
     queryEvent = Event.and(ImmutableList.of(
-        Event.of("Reveal1", "L"),
-        Event.of("Reveal2", "L"),
-        Event.of("Reveal3", "L")));
+        Event.varEquals("Reveal1", "L"),
+        Event.varEquals("Reveal2", "L"),
+        Event.varEquals("Reveal3", "L")));
 
     probability = network.queryProbability(queryEvent);
     assertEquals(3/8d, probability, DELTA);
 
     // Compute the probability of picking the pair of doors with two tigers.
-    queryEvent = Event.of("InitialChoice", "TT");
+    queryEvent = Event.varEquals("InitialChoice", "TT");
 
     probability = network.queryProbability(queryEvent);
     assertEquals(1/3d, probability, DELTA);
@@ -63,7 +63,7 @@ public class BayesNetworkTest extends TestCase {
     // Compute the probability of picking a pair of doors with at least one
     // tiger.
     queryEvent = Event.or(
-        Event.of("InitialChoice", "TT"), Event.of("InitialChoice", "TL"));
+        Event.varEquals("InitialChoice", "TT"), Event.varEquals("InitialChoice", "TL"));
 
     probability = network.queryProbability(queryEvent);
     assertEquals(2/3d, probability, DELTA);
@@ -77,25 +77,25 @@ public class BayesNetworkTest extends TestCase {
 
     // Compute the probability of surviving all 3 rounds, given that the
     // protagonist has survived through two rounds so far.
-    Event queryEvent = Event.of("Reveal3", "L");
+    Event queryEvent = Event.varEquals("Reveal3", "L");
     Event evidence = Event.and(
-        Event.of("Reveal1", "L"), Event.of("Reveal2", "L"));
+        Event.varEquals("Reveal1", "L"), Event.varEquals("Reveal2", "L"));
 
     double probability = network.queryProbability(queryEvent, evidence);
     assertEquals(9/10d, probability, DELTA);
 
     // Should get the same result when the query event contains the evidence.
     queryEvent = Event.and(ImmutableList.of(
-        Event.of("Reveal1", "L"),
-        Event.of("Reveal2", "L"),
-        Event.of("Reveal3", "L")));
+        Event.varEquals("Reveal1", "L"),
+        Event.varEquals("Reveal2", "L"),
+        Event.varEquals("Reveal3", "L")));
 
     probability = network.queryProbability(queryEvent, evidence);
     assertEquals(9/10d, probability, DELTA);
 
     // Compute the probability of surviving all 3 rounds, given that the
     // protagonist has survived through one round so far.
-    evidence = Event.of("Reveal1", "L");
+    evidence = Event.varEquals("Reveal1", "L");
 
     probability = network.queryProbability(queryEvent, evidence);
     assertEquals(3/4d, probability, DELTA);
@@ -148,17 +148,18 @@ public class BayesNetworkTest extends TestCase {
 
     // Compute the probability that a tram is going to Albertov, given
     // that it is evening and the tram is short.
-    Event queryEvent = Event.of("Direction", "Albertov");
+    Event queryEvent = Event.varEquals("Direction", "Albertov");
     Event evidence = Event.and(
-        Event.of("Time", "Evening"), Event.of("TramLength", "Short"));
+        Event.varEquals("Time", "Evening"),
+        Event.varEquals("TramLength", "Short"));
 
     double probability = network.queryProbability(queryEvent, evidence);
     assertEquals(79/310d, probability, DELTA);
 
     // Compute the probability that a tram is long, given that it belongs
     // to Line 22.
-    queryEvent = Event.of("TramLength", "Long");
-    evidence = Event.of("Line", "Line22");
+    queryEvent = Event.varEquals("TramLength", "Long");
+    evidence = Event.varEquals("Line", "Line22");
 
     probability = network.queryProbability(queryEvent, evidence);
     assertEquals(29/30d, probability, DELTA);

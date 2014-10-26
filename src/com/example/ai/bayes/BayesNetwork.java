@@ -47,7 +47,7 @@ public abstract class BayesNetwork {
         queryEvent.getAndClauses().subList(
             1, queryEvent.getAndClauses().size());
 
-    Event firstClauseEvent = Event.of(firstClause);
+    Event firstClauseEvent = Event.fromAndClauses(firstClause);
     Event remainingOrEvent = Event.fromAndClauses(remainingClauses);
 
     return queryProbability(firstClauseEvent)

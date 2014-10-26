@@ -96,12 +96,8 @@ public abstract class Event {
     }
   }
 
-  public static Event of(AndClause andClause) {
-    return fromAndClauses(ImmutableList.of(andClause));
-  }
-
-  public static Event of(String variable, String value) {
-    return of(AndClause.equal(variable, value));
+  public static Event varEquals(String variable, String value) {
+    return fromAndClauses(AndClause.equal(variable, value));
   }
 
   public static Event not(Event e) {
@@ -112,6 +108,10 @@ public abstract class Event {
       result = and(result, andClause.negate());
     }
     return result;
+  }
+
+  public static Event fromAndClauses(AndClause... andClause) {
+    return fromAndClauses(ImmutableList.copyOf(andClause));
   }
 
   public static Event fromAndClauses(Iterable<? extends AndClause> andClauses) {
@@ -153,7 +153,7 @@ public abstract class Event {
 
   /** Returns a single empty AND-clause, which always evaluates to true. */
   public static Event alwaysTrue() {
-    return of(AndClause.alwaysTrue());
+    return fromAndClauses(AndClause.alwaysTrue());
   }
 
   /** Returns an empty OR-clause, which always evaluates to false. */
