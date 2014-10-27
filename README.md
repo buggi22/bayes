@@ -8,7 +8,8 @@ This is intended to be a "toy" implementation for educational purposes.  The cod
 
 Consider the example outlined [here](http://en.wikipedia.org/wiki/Bayesian_network#Example).  The following code illustrates how to calculate the probability that it is raining, given that the grass is wet.
 
-```
+```java
+public class Example {
   private static final double DELTA = 0.000001;
 
   public void testGrassNetwork() {
@@ -47,6 +48,7 @@ Consider the example outlined [here](http://en.wikipedia.org/wiki/Bayesian_netwo
         network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(891/2491d, probability, DELTA);
   }
+}
 ```
 
 ## Unit tests
