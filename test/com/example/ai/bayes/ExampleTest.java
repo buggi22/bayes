@@ -81,7 +81,7 @@ public class ExampleTest extends TestCase {
     Event evidence = Event.and(
         Event.varEquals("Reveal1", "L"), Event.varEquals("Reveal2", "L"));
 
-    double probability = network.queryProbability(queryEvent, evidence);
+    double probability = network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(9/10d, probability, DELTA);
 
     // Should get the same result when the query event contains the evidence.
@@ -90,14 +90,14 @@ public class ExampleTest extends TestCase {
         Event.varEquals("Reveal2", "L"),
         Event.varEquals("Reveal3", "L")));
 
-    probability = network.queryProbability(queryEvent, evidence);
+    probability = network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(9/10d, probability, DELTA);
 
     // Compute the probability of surviving all 3 rounds, given that the
     // protagonist has survived through one round so far.
     evidence = Event.varEquals("Reveal1", "L");
 
-    probability = network.queryProbability(queryEvent, evidence);
+    probability = network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(3/4d, probability, DELTA);
   }
 
@@ -153,7 +153,7 @@ public class ExampleTest extends TestCase {
         Event.varEquals("Time", "Evening"),
         Event.varEquals("TramLength", "Short"));
 
-    double probability = network.queryProbability(queryEvent, evidence);
+    double probability = network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(79/310d, probability, DELTA);
 
     // Compute the probability that a tram is long, given that it belongs
@@ -161,7 +161,7 @@ public class ExampleTest extends TestCase {
     queryEvent = Event.varEquals("TramLength", "Long");
     evidence = Event.varEquals("Line", "Line22");
 
-    probability = network.queryProbability(queryEvent, evidence);
+    probability = network.queryProbabilityWithEvidence(queryEvent, evidence);
     assertEquals(29/30d, probability, DELTA);
   }
 }

@@ -163,12 +163,12 @@ public class BayesNetworkTest extends TestCase {
   public void testConditionalWithEvidence() {
     BayesNetwork network = getConditionalNetwork();
 
-    double probability = network.queryProbability(
+    double probability = network.queryProbabilityWithEvidence(
         varEquals("X", "X1"),
         varEquals("Y", "Y1"));
     assertEquals(1/15d, probability, DELTA);
 
-    probability = network.queryProbability(
+    probability = network.queryProbabilityWithEvidence(
         varEquals("X", "X2"),
         varEquals("Y", "Y1"));
     assertEquals(3/5d, probability, DELTA);
@@ -177,7 +177,7 @@ public class BayesNetworkTest extends TestCase {
   public void testConditionalNot() {
     BayesNetwork network = getConditionalNetwork();
 
-    double probability = network.queryProbability(
+    double probability = network.queryProbabilityWithEvidence(
         not(varEquals("X", "X1")),
         not(varEquals("Y", "Y1")));
     assertEquals(66/85d, probability, DELTA);
@@ -186,7 +186,7 @@ public class BayesNetworkTest extends TestCase {
   public void testConditionalAnd() {
     BayesNetwork network = getConditionalNetwork();
 
-    double probability = network.queryProbability(
+    double probability = network.queryProbabilityWithEvidence(
         and(varEquals("X", "X1"), varEquals("Y", "Y1")),
         and(varEquals("Z", "Z1"), varEquals("W", "W1")));
     assertEquals(4/1871d, probability, DELTA);
@@ -195,13 +195,13 @@ public class BayesNetworkTest extends TestCase {
   public void testConditionalOr() {
     BayesNetwork network = getConditionalNetwork();
 
-    double probability = network.queryProbability(
+    double probability = network.queryProbabilityWithEvidence(
         or(varEquals("X", "X2"), varEquals("X", "X3")),
         or(varEquals("Y", "Y2"), varEquals("Y", "Y3")));
     // NOTE: Same result as P(X != X1 | Y != Y1)
     assertEquals(66/85d, probability, DELTA);
 
-    probability = network.queryProbability(
+    probability = network.queryProbabilityWithEvidence(
         or(varEquals("X", "X1"), varEquals("Y", "Y1")),
         or(varEquals("Z", "Z1"), varEquals("W", "W1")));
     assertEquals(3794/12989d, probability, DELTA);

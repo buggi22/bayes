@@ -9,6 +9,10 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
+/**
+ * Represents a conditional probability table, to be used in a
+ * {@link BayesNetwork}.
+ */
 @AutoValue
 public abstract class ConditionalDistribution {
   public abstract String getVariableName();
@@ -16,6 +20,9 @@ public abstract class ConditionalDistribution {
   public abstract ImmutableMap<ImmutableList<String>, Double>
       getProbabilities();
 
+  /**
+   * Gets the values that the current variable can take on.
+   */
   public ImmutableSet<String> getValues() {
     ImmutableSet.Builder<String> values = ImmutableSet.builder();
     for (ImmutableList<String> key : getProbabilities().keySet()) {
@@ -27,10 +34,17 @@ public abstract class ConditionalDistribution {
     return values.build();
   }
 
+  /**
+   * Creates a builder for a conditional distribution with the given name.
+   */
   public static Builder forVariable(String variableName) {
     return new Builder(variableName);
   }
 
+  /**
+   * A mutable builder for constructing instances of
+   * {@link ConditionalDistribution}.
+   */
   public static class Builder {
     private final String variableName;
     private ImmutableList<String> parentVariableNames = ImmutableList.of();
