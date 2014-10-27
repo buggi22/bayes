@@ -2,10 +2,10 @@ package com.example.ai.bayes;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +16,7 @@ public abstract class Event {
 
   @AutoValue
   public abstract static class AndClause {
-    public abstract ImmutableMultimap<String, ? extends Condition>
+    public abstract ImmutableSetMultimap<String, ? extends Condition>
         getConditions();
 
     public Event negate() {
@@ -26,14 +26,14 @@ public abstract class Event {
         String variable = entry.getKey();
         Condition condition = entry.getValue();
         negatedClauses.add(AndClause.of(
-            ImmutableMultimap.of(variable, condition)));
+            ImmutableSetMultimap.of(variable, condition.negate())));
       }
       return Event.fromAndClauses(ImmutableList.copyOf(negatedClauses));
     }
 
     public static AndClause concat(AndClause clause1, AndClause clause2) {
-      ImmutableMultimap<String, Condition> newConditions =
-          ImmutableMultimap.<String, Condition>builder()
+      ImmutableSetMultimap<String, Condition> newConditions =
+          ImmutableSetMultimap.<String, Condition>builder()
               .putAll(clause1.getConditions())
               .putAll(clause2.getConditions())
               .build();
@@ -41,24 +41,24 @@ public abstract class Event {
     }
 
     public static AndClause of(
-        Multimap<String, ? extends Condition> conditions) {
+        SetMultimap<String, ? extends Condition> conditions) {
       return new AutoValue_Event_AndClause(
-          ImmutableMultimap.copyOf(conditions));
+          ImmutableSetMultimap.copyOf(conditions));
     }
 
     public static AndClause equal(String variable, String value) {
-      return of(ImmutableMultimap.of(variable, Condition.equal(value)));
+      return of(ImmutableSetMultimap.of(variable, Condition.equal(value)));
     }
 
     public static AndClause notEqual(String variable, String value) {
-      return of(ImmutableMultimap.of(variable, Condition.notEqual(value)));
+      return of(ImmutableSetMultimap.of(variable, Condition.notEqual(value)));
     }
 
     /**
      * An empty AND-clause represents an always-true predicate.
      */
     public static AndClause alwaysTrue() {
-      return of(ImmutableMultimap.<String, Condition>of());
+      return of(ImmutableSetMultimap.<String, Condition>of());
     }
   }
 

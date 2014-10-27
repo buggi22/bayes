@@ -160,7 +160,7 @@ public abstract class BayesNetwork {
       }
     }
     throw new IllegalArgumentException(
-        "Could not find distribution for variable named" + variableName);
+        "Could not find distribution for variable named " + variableName);
   }
 
   private ImmutableSet<String> getValues(String variableName) {

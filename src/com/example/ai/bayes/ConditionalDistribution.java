@@ -45,6 +45,10 @@ public abstract class ConditionalDistribution {
         double probability, String firstValue, String... otherValues) {
       Preconditions.checkState(
           otherValues.length == parentVariableNames.size());
+      Preconditions.checkState(!Double.isNaN(probability));
+      Preconditions.checkState(!Double.isInfinite(probability));
+      Preconditions.checkState(probability >= 0d);
+      Preconditions.checkState(probability <= 1d);
       ImmutableList<String> values = ImmutableList.<String>builder()
           .add(firstValue)
           .addAll(ImmutableList.copyOf(otherValues))
@@ -59,6 +63,8 @@ public abstract class ConditionalDistribution {
     }
 
     public ConditionalDistribution build() {
+      // TODO: check that the probabilities sum correctly to 1 with the right
+      // combinations of parent variables.
       return new AutoValue_ConditionalDistribution(
           variableName,
           parentVariableNames,
