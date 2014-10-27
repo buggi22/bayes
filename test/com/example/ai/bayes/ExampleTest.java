@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
-public class BayesNetworkTest extends TestCase {
+public class ExampleTest extends TestCase {
 
   private static final double DELTA = 0.000001;
 

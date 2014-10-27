@@ -6,7 +6,9 @@ This is intended to be a "toy" implementation for educational purposes.  The cod
 
 ## Unit tests
 
-Examples, in the form of unit tests, can be found in [`BayesNetworkTests.java`](/src/com/example/ai/bayes/BayesNetworkTest.java).
+Unit test can be found under the [`test`](/test/com/example/ai/bayes) directory.
+
+In particular, examples corresponding to a handful of probability exercises can be found in [`ExampleTest.java`](/test/com/example/ai/bayes/ExampleTest.java).
 
 ## Dependencies
 
@@ -16,3 +18,4 @@ This project depends on the following libraries:
 - Google AutoValue
 
 Google AutoValue, in particular, requires annotation processing to be enabled during compilation.
+
